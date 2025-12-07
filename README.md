@@ -56,7 +56,7 @@ A Flask-based web application for analyzing text sentiment using machine learnin
 
 1. **Clone or download the project**
    ```bash
-   cd "Nisha_Sentiment Prediction WebApp 2"
+   cd "Sentiment-Analysis-of-Social-Media-Platform"
    ```
 
 2. **Create a virtual environment (recommended)**
