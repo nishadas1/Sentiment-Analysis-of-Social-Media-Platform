@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}History - Sentiment Analyzer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .history-item {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        border-left: 4px solid;
+    }
+    
+    .history-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .history-item.positive {
+        border-left-color: #2ecc71;
+    }
+    
+    .history-item.negative {
+        border-left-color: #e74c3c;
+    }
+    
+    .history-item.neutral {
+        border-left-color: #95a5a6;
+    }
+    
+    .sentiment-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .sentiment-badge.positive {
+        background: rgba(46, 204, 113, 0.15);
+        color: #27ae60;
+    }
+    
+    .sentiment-badge.negative {
+        background: rgba(231, 76, 60, 0.15);
+        color: #c0392b;
+    }
+    
+    .sentiment-badge.neutral {
+        background: rgba(149, 165, 166, 0.15);
+        color: #7f8c8d;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 80px;
+        color: #bdc3c7;
+        margin-bottom: 20px;
+    }
+    
+    .history-text {
+        color: #2c3e50;
+        font-size: 1rem;
+        line-height: 1.6;
+        max-height: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .history-meta {
+        color: #95a5a6;
+        font-size: 0.85rem;
+    }
+    
+    .filter-btn {
+        border-radius: 20px;
+        padding: 8px 20px;
+        font-size: 0.9rem;
+        margin: 5px;
+    }
+    
+    .filter-btn.active {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-color: transparent;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            <i class="fas fa-brain me-2"></i>Sentiment Analyzer
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-home me-1"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('history') }}">
+                        <i class="fas fa-history me-1"></i>History
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('about') }}">
+                        <i class="fas fa-info-circle me-1"></i>About
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>{{ session.get('name', 'User') }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><span class="dropdown-item-text text-muted">{{ session.get('email', '') }}</span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="row mb-4 animate-fade-in">
+        <div class="col-12">
+            <h2 class="text-white mb-2">
+                <i class="fas fa-history me-2"></i>Analysis History
+            </h2>
+            <p class="text-white opacity-75">View your past sentiment analysis results</p>
+        </div>
+    </div>
+    
+    <!-- History Card -->
+    <div class="row animate-fade-in">
+        <div class="col-12">
+            <div class="history-card">
+                <!-- Filters -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+                    <div class="filters">
+                        <button class="btn btn-outline-primary filter-btn active" data-filter="all">
+                            <i class="fas fa-list me-1"></i>All
+                        </button>
+                        <button class="btn btn-outline-success filter-btn" data-filter="positive">
+                            <i class="fas fa-smile me-1"></i>Positive
+                        </button>
+                        <button class="btn btn-outline-secondary filter-btn" data-filter="neutral">
+                            <i class="fas fa-meh me-1"></i>Neutral
+                        </button>
+                        <button class="btn btn-outline-danger filter-btn" data-filter="negative">
+                            <i class="fas fa-frown me-1"></i>Negative
+                        </button>
+                    </div>
+                    <button class="btn btn-outline-danger" id="clearHistory">
+                        <i class="fas fa-trash me-1"></i>Clear All
+                    </button>
+                </div>
+                
+                <hr>
+                
+                <!-- History List -->
+                <div id="historyList">
+                    {% if history and history|length > 0 %}
+                        {% for item in history %}
+                            <div class="history-item {{ item.sentiment|lower }}" data-sentiment="{{ item.sentiment|lower }}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1 me-3">
+                                        <p class="history-text mb-2">{{ item.text }}</p>
+                                        <span class="history-meta">
+                                            <i class="fas fa-clock me-1"></i>{{ item.timestamp }}
+                                            <span class="ms-3">
+                                                <i class="fas fa-percentage me-1"></i>{{ (item.confidence * 100)|round(1) }}% confidence
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <span class="sentiment-badge {{ item.sentiment|lower }}">
+                                        {% if item.sentiment == 'Positive' %}
+                                            <i class="fas fa-smile me-1"></i>
+                                        {% elif item.sentiment == 'Negative' %}
+                                            <i class="fas fa-frown me-1"></i>
+                                        {% else %}
+                                            <i class="fas fa-meh me-1"></i>
+                                        {% endif %}
+                                        {{ item.sentiment }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox d-block"></i>
+                            <h4 class="text-muted mb-2">No History Yet</h4>
+                            <p class="text-muted mb-4">Your analyzed texts will appear here</p>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Analyze Your First Text
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Stats Summary -->
+                {% if history and history|length > 0 %}
+                    <hr class="mt-4">
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <h3 class="gradient-text">{{ history|length }}</h3>
+                            <p class="text-muted mb-0">Total Analyses</p>
+                        </div>
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <h3 class="text-success">{{ history|selectattr('sentiment', 'equalto', 'Positive')|list|length }}</h3>
+                            <p class="text-muted mb-0">Positive</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="text-danger">{{ history|selectattr('sentiment', 'equalto', 'Negative')|list|length }}</h3>
+                            <p class="text-muted mb-0">Negative</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<footer class="footer text-center">
+    <div class="container">
+        <p class="mb-0 opacity-75">
+            <i class="fas fa-heart me-2"></i>Sentiment Analyzer &copy; 2025 | Powered by Machine Learning
+        </p>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Filter functionality
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active state
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const filter = this.dataset.filter;
+            const items = document.querySelectorAll('.history-item');
+            
+            items.forEach(item => {
+                if (filter === 'all' || item.dataset.sentiment === filter) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+    
+    // Clear history
+    document.getElementById('clearHistory').addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear all history?')) {
+            // In a real app, this would make an AJAX call to clear history
+            document.getElementById('historyList').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox d-block"></i>
+                    <h4 class="text-muted mb-2">No History Yet</h4>
+                    <p class="text-muted mb-4">Your analyzed texts will appear here</p>
+                    <a href="/dashboard" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Analyze Your First Text
+                    </a>
+                </div>
+            `;
+        }
+    });
+</script>
+{% endblock %}

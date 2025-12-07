@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sentiment Analyzer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        padding: 30px 0;
+    }
+    
+    .analysis-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .textarea-custom {
+        border: 2px solid #e0e0e0;
+        border-radius: 15px;
+        padding: 20px;
+        font-size: 1.1rem;
+        resize: none;
+        transition: all 0.3s ease;
+    }
+    
+    .textarea-custom:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+    }
+    
+    .result-card {
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.5s ease;
+    }
+    
+    .result-positive {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white;
+    }
+    
+    .result-negative {
+        background: linear-gradient(135deg, #c0392b, #e74c3c);
+        color: white;
+    }
+    
+    .result-neutral {
+        background: linear-gradient(135deg, #7f8c8d, #95a5a6);
+        color: white;
+    }
+    
+    .result-icon {
+        font-size: 4rem;
+        margin-bottom: 15px;
+    }
+    
+    .result-text {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .confidence-bar {
+        height: 10px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.3);
+        overflow: hidden;
+        margin-top: 15px;
+    }
+    
+    .confidence-fill {
+        height: 100%;
+        background: white;
+        border-radius: 5px;
+        transition: width 0.5s ease;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stats-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 1.5rem;
+    }
+    
+    .example-text {
+        cursor: pointer;
+        padding: 10px 15px;
+        border-radius: 10px;
+        background: #f8f9fa;
+        margin: 5px;
+        display: inline-block;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+    
+    .example-text:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .loading-spinner {
+        display: none;
+    }
+    
+    .loading-spinner.active {
+        display: inline-block;
+    }
+    
+    #resultSection {
+        display: none;
+    }
+    
+    #resultSection.show {
+        display: block;
+        animation: fadeInUp 0.5s ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            <i class="fas fa-brain me-2"></i>Sentiment Analyzer
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-home me-1"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('about') }}">
+                        <i class="fas fa-info-circle me-1"></i>About
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>{{ session.get('name', 'User') }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><span class="dropdown-item-text text-muted">{{ session.get('email', '') }}</span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4 animate-fade-in">
+        <div class="col-12">
+            <h2 class="text-white mb-2">
+                <i class="fas fa-hand-wave me-2"></i>Welcome, {{ session.get('name', 'User') }}!
+            </h2>
+            <p class="text-white opacity-75">Analyze the sentiment of any text using our AI-powered system.</p>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row mb-4 animate-fade-in">
+        <div class="col-md-4 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon" style="background: rgba(46, 204, 113, 0.1); color: #2ecc71;">
+                    <i class="fas fa-smile"></i>
+                </div>
+                <h4 class="mb-1">Positive</h4>
+                <p class="text-muted mb-0">Detects happy, excited, satisfied sentiments</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon" style="background: rgba(149, 165, 166, 0.1); color: #7f8c8d;">
+                    <i class="fas fa-meh"></i>
+                </div>
+                <h4 class="mb-1">Neutral</h4>
+                <p class="text-muted mb-0">Identifies objective, balanced statements</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stats-card">
+                <div class="stats-icon" style="background: rgba(231, 76, 60, 0.1); color: #e74c3c;">
+                    <i class="fas fa-frown"></i>
+                </div>
+                <h4 class="mb-1">Negative</h4>
+                <p class="text-muted mb-0">Recognizes sad, angry, frustrated emotions</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Analysis Card -->
+    <div class="row animate-fade-in">
+        <div class="col-lg-8 mb-4">
+            <div class="analysis-card p-4">
+                <h4 class="mb-4">
+                    <i class="fas fa-edit me-2 text-primary"></i>Enter Your Text
+                </h4>
+                
+                <form id="sentimentForm">
+                    <div class="mb-3">
+                        <textarea class="form-control textarea-custom" id="textInput" name="text" 
+                                  rows="5" placeholder="Type or paste your text here to analyze its sentiment..."
+                                  required></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted" id="charCount">0 characters</span>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-secondary me-2" id="clearBtn">
+                                <i class="fas fa-eraser me-1"></i>Clear
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="analyzeBtn">
+                                <span class="loading-spinner" id="spinner">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                </span>
+                                <i class="fas fa-magic me-1" id="analyzeIcon"></i>Analyze Sentiment
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <h6 class="text-muted mb-3">
+                    <i class="fas fa-lightbulb me-2"></i>Try these examples:
+                </h6>
+                <div class="example-texts">
+                    <span class="example-text" onclick="setExample('I absolutely love this product! It exceeded all my expectations.')">
+                        😊 Positive Example
+                    </span>
+                    <span class="example-text" onclick="setExample('The weather today is cloudy with temperatures around 20 degrees.')">
+                        😐 Neutral Example
+                    </span>
+                    <span class="example-text" onclick="setExample('This is the worst experience I have ever had. Totally disappointed!')">
+                        😞 Negative Example
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Result Section -->
+        <div class="col-lg-4 mb-4">
+            <div id="resultSection" class="h-100">
+                <div class="result-card h-100" id="resultCard">
+                    <div id="resultContent">
+                        <!-- Results will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Placeholder when no result -->
+            <div class="analysis-card p-4 h-100 text-center" id="placeholderCard">
+                <div class="py-5">
+                    <i class="fas fa-arrow-left fa-3x text-muted mb-3 d-block"></i>
+                    <h5 class="text-muted">Enter text to analyze</h5>
+                    <p class="text-muted mb-0">Your sentiment analysis results will appear here</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Features Section -->
+    <div class="row mt-4 animate-fade-in">
+        <div class="col-12">
+            <div class="analysis-card p-4">
+                <h5 class="mb-4">
+                    <i class="fas fa-star me-2 text-warning"></i>How It Works
+                </h5>
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="mb-3">
+                            <span class="badge bg-primary rounded-pill px-3 py-2 fs-5">1</span>
+                        </div>
+                        <h6>Enter Text</h6>
+                        <p class="text-muted mb-0">Type or paste any text you want to analyze</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="mb-3">
+                            <span class="badge bg-primary rounded-pill px-3 py-2 fs-5">2</span>
+                        </div>
+                        <h6>AI Processing</h6>
+                        <p class="text-muted mb-0">Our ML model analyzes the text patterns</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="mb-3">
+                            <span class="badge bg-primary rounded-pill px-3 py-2 fs-5">3</span>
+                        </div>
+                        <h6>Get Results</h6>
+                        <p class="text-muted mb-0">Receive instant sentiment classification</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<footer class="footer text-center">
+    <div class="container">
+        <p class="mb-0 opacity-75">
+            <i class="fas fa-heart me-2"></i>Sentiment Analyzer &copy; 2025 | Powered by Machine Learning
+        </p>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const textInput = document.getElementById('textInput');
+    const charCount = document.getElementById('charCount');
+    const sentimentForm = document.getElementById('sentimentForm');
+    const resultSection = document.getElementById('resultSection');
+    const placeholderCard = document.getElementById('placeholderCard');
+    const resultCard = document.getElementById('resultCard');
+    const resultContent = document.getElementById('resultContent');
+    const spinner = document.getElementById('spinner');
+    const analyzeIcon = document.getElementById('analyzeIcon');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    
+    // Character count
+    textInput.addEventListener('input', function() {
+        charCount.textContent = this.value.length + ' characters';
+    });
+    
+    // Clear button
+    document.getElementById('clearBtn').addEventListener('click', function() {
+        textInput.value = '';
+        charCount.textContent = '0 characters';
+        resultSection.classList.remove('show');
+        placeholderCard.style.display = 'block';
+    });
+    
+    // Set example text
+    function setExample(text) {
+        textInput.value = text;
+        charCount.textContent = text.length + ' characters';
+        textInput.focus();
+    }
+    
+    // Form submission
+    sentimentForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const text = textInput.value.trim();
+        if (!text) return;
+        
+        // Show loading
+        spinner.classList.add('active');
+        analyzeIcon.style.display = 'none';
+        analyzeBtn.disabled = true;
+        
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: text })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                displayResult(data);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            alert('An error occurred. Please try again.');
+            console.error(error);
+        } finally {
+            // Hide loading
+            spinner.classList.remove('active');
+            analyzeIcon.style.display = 'inline';
+            analyzeBtn.disabled = false;
+        }
+    });
+    
+    function displayResult(data) {
+        placeholderCard.style.display = 'none';
+        
+        let resultClass, icon, label;
+        
+        if (data.sentiment === 'Positive') {
+            resultClass = 'result-positive';
+            icon = 'fa-smile-beam';
+            label = 'Positive';
+        } else if (data.sentiment === 'Negative') {
+            resultClass = 'result-negative';
+            icon = 'fa-sad-tear';
+            label = 'Negative';
+        } else {
+            resultClass = 'result-neutral';
+            icon = 'fa-meh';
+            label = 'Neutral';
+        }
+        
+        resultCard.className = 'result-card h-100 ' + resultClass;
+        
+        const confidence = (data.confidence * 100).toFixed(1);
+        
+        resultContent.innerHTML = `
+            <i class="fas ${icon} result-icon"></i>
+            <h3 class="result-text">${label}</h3>
+            <p class="opacity-75 mb-2">Sentiment Detected</p>
+            <div class="mt-3">
+                <small class="opacity-75">Confidence: ${confidence}%</small>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: ${confidence}%"></div>
+                </div>
+            </div>
+        `;
+        
+        resultSection.classList.add('show');
+    }
+</script>
+{% endblock %}

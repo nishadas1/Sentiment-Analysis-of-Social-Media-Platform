@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}About - Sentiment Analyzer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .about-hero {
+        padding: 60px 0;
+    }
+    
+    .about-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .feature-box {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .feature-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2rem;
+    }
+    
+    .tech-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-radius: 20px;
+        margin: 5px;
+        font-size: 0.9rem;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 30px;
+        padding-bottom: 30px;
+        border-left: 2px solid var(--primary-color);
+    }
+    
+    .timeline-item:last-child {
+        border-left: none;
+    }
+    
+    .timeline-dot {
+        position: absolute;
+        left: -8px;
+        top: 0;
+        width: 14px;
+        height: 14px;
+        background: var(--primary-color);
+        border-radius: 50%;
+    }
+</style>
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-light sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            <i class="fas fa-brain me-2"></i>Sentiment Analyzer
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-home me-1"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('about') }}">
+                        <i class="fas fa-info-circle me-1"></i>About
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>{{ session.get('name', 'User') }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><span class="dropdown-item-text text-muted">{{ session.get('email', '') }}</span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="row mb-5 animate-fade-in">
+        <div class="col-lg-8 mx-auto text-center text-white">
+            <h1 class="display-4 fw-bold mb-4">
+                <i class="fas fa-brain me-3"></i>About Sentiment Analyzer
+            </h1>
+            <p class="lead opacity-75">
+                A powerful AI-powered text sentiment analysis tool that helps you understand the emotional tone behind any text.
+            </p>
+        </div>
+    </div>
+    
+    <!-- About Card -->
+    <div class="row mb-5 animate-fade-in">
+        <div class="col-12">
+            <div class="about-card">
+                <div class="row align-items-center">
+                    <div class="col-lg-6 mb-4 mb-lg-0">
+                        <h2 class="gradient-text mb-4">What is Sentiment Analysis?</h2>
+                        <p class="text-muted">
+                            Sentiment analysis, also known as opinion mining, is a natural language processing (NLP) technique 
+                            used to determine whether data is positive, negative, or neutral. It's widely used for analyzing 
+                            customer feedback, social media monitoring, brand reputation management, and more.
+                        </p>
+                        <p class="text-muted mb-0">
+                            Our system uses advanced machine learning algorithms trained on a comprehensive dataset of over 
+                            <strong>325,000+ samples</strong> from Twitter, Reddit, and other social platforms to provide 
+                            accurate sentiment predictions.
+                        </p>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="text-center">
+                            <i class="fas fa-robot" style="font-size: 150px; color: var(--primary-color); opacity: 0.8;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Features -->
+    <div class="row mb-5 animate-fade-in">
+        <div class="col-12">
+            <h2 class="text-white text-center mb-4">
+                <i class="fas fa-star me-2"></i>Key Features
+            </h2>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="feature-box">
+                <div class="feature-icon" style="background: rgba(46, 204, 113, 0.15); color: #2ecc71;">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h5>Real-time Analysis</h5>
+                <p class="text-muted mb-0">Get instant sentiment predictions within milliseconds</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="feature-box">
+                <div class="feature-icon" style="background: rgba(52, 152, 219, 0.15); color: #3498db;">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h5>AI-Powered</h5>
+                <p class="text-muted mb-0">Advanced ML models for accurate predictions</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="feature-box">
+                <div class="feature-icon" style="background: rgba(155, 89, 182, 0.15); color: #9b59b6;">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h5>Secure & Private</h5>
+                <p class="text-muted mb-0">Your data is processed securely and privately</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="feature-box">
+                <div class="feature-icon" style="background: rgba(241, 196, 15, 0.15); color: #f1c40f;">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h5>High Accuracy</h5>
+                <p class="text-muted mb-0">Trained on 325K+ real-world samples</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="feature-box">
+                <div class="feature-icon" style="background: rgba(230, 126, 34, 0.15); color: #e67e22;">
+                    <i class="fas fa-user-friends"></i>
+                </div>
+                <h5>User Friendly</h5>
+                <p class="text-muted mb-0">Simple and intuitive interface</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Technology Stack -->
+    <div class="row mb-5 animate-fade-in">
+        <div class="col-12">
+            <div class="about-card text-center">
+                <h3 class="gradient-text mb-4">
+                    <i class="fas fa-code me-2"></i>Technology Stack
+                </h3>
+                <p class="text-muted mb-4">Built with modern technologies for reliability and performance</p>
+                <div class="tech-badges">
+                    <span class="tech-badge"><i class="fab fa-python me-2"></i>Python</span>
+                    <span class="tech-badge"><i class="fas fa-flask me-2"></i>Flask</span>
+                    <span class="tech-badge"><i class="fas fa-cogs me-2"></i>Scikit-learn</span>
+                    <span class="tech-badge"><i class="fas fa-font me-2"></i>NLTK</span>
+                    <span class="tech-badge"><i class="fas fa-file-alt me-2"></i>TF-IDF</span>
+                    <span class="tech-badge"><i class="fab fa-bootstrap me-2"></i>Bootstrap 5</span>
+                    <span class="tech-badge"><i class="fab fa-html5 me-2"></i>HTML5</span>
+                    <span class="tech-badge"><i class="fab fa-css3-alt me-2"></i>CSS3</span>
+                    <span class="tech-badge"><i class="fab fa-js me-2"></i>JavaScript</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- How It Works -->
+    <div class="row animate-fade-in">
+        <div class="col-12">
+            <div class="about-card">
+                <h3 class="gradient-text mb-4 text-center">
+                    <i class="fas fa-cog me-2"></i>How It Works
+                </h3>
+                <div class="row">
+                    <div class="col-lg-8 mx-auto">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <h5><i class="fas fa-keyboard me-2 text-primary"></i>Text Input</h5>
+                                <p class="text-muted mb-0">User enters text through the intuitive web interface</p>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <h5><i class="fas fa-broom me-2 text-primary"></i>Text Preprocessing</h5>
+                                <p class="text-muted mb-0">Text is cleaned, tokenized, and lemmatized using NLTK</p>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <h5><i class="fas fa-vector-square me-2 text-primary"></i>Feature Extraction</h5>
+                                <p class="text-muted mb-0">TF-IDF vectorizer converts text to numerical features</p>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <h5><i class="fas fa-robot me-2 text-primary"></i>ML Prediction</h5>
+                                <p class="text-muted mb-0">Trained model predicts sentiment class with confidence score</p>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <h5><i class="fas fa-check-circle me-2 text-primary"></i>Result Display</h5>
+                                <p class="text-muted mb-0">Sentiment result is displayed with visual indicators</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<footer class="footer text-center">
+    <div class="container">
+        <p class="mb-0 opacity-75">
+            <i class="fas fa-heart me-2"></i>Sentiment Analyzer &copy; 2025 | Powered by Machine Learning
+        </p>
+    </div>
+</footer>
+{% endblock %}
